@@ -63,17 +63,77 @@ class Cubo{
             face_aux[0] = face[3][0];
             face_aux[1] = face[3][3];
             //-baixo para esquerda
-            face[3][1] = face[5][3];
-            face[3][2] = face[5][2];
+            face[3][0] = face[5][0];
+            face[3][3] = face[5][1];
             //-dir para baixo
-            face[5][2] = face[1][0];
-            face[5][3] = face[1][3];
+            face[5][1] = face[1][1];
+            face[5][0] = face[1][2];
             //-topo para dir
-            face[1][0] = face[4][3];
-            face[1][3] = face[4][2];
+            face[1][1] = face[4][0];
+            face[1][2] = face[4][1];
             //-esq para topo
-            face[4][3] = face_aux[0];
+            face[4][1] = face_aux[0];
+            face[4][0] = face_aux[1];
+        }
+
+        void rota_dir(){
+            char aux = face[1][0];
+           //face
+           face[1][0] = face[1][3];
+           face[1][3] = face[1][2];
+           face[1][2] = face[1][1];
+           face[1][1] = aux;
+           //laterais
+            array<char,2> face_aux;
+            face_aux[0] = face[0][1];
+            face_aux[1] = face[0][2];
+            //-baixo para frente
+            face[0][2] = face[5][1];
+            face[0][1] = face[5][2];
+            //-fundo para baixo
+            face[5][1] = face[2][0];
+            face[5][2] = face[2][3];
+            //-topo para fundo
+            face[2][3] = face[4][1];
+            face[2][0] = face[4][2];
+            //-frente para topo
+            face[4][1] = face_aux[0];
             face[4][2] = face_aux[1];
+        }
+
+        void rota_esq(){
+           char aux = face[3][0];
+           //face
+           face[3][0] = face[3][1];
+           face[3][1] = face[3][2];
+           face[3][2] = face[3][3];
+           face[3][3] = aux;
+           //laterais
+            array<char,2> face_aux;
+            face_aux[0] = face[0][0];
+            face_aux[1] = face[0][3];
+            //-baixo para frente
+            face[0][3] = face[5][0];
+            face[0][0] = face[5][3];
+            //-fundo para baixo
+            face[5][0] = face[2][1];
+            face[5][3] = face[2][2];
+            //-topo para fundo
+            face[2][2] = face[4][0];
+            face[2][1] = face[4][3];
+            //-frente para topo
+            face[4][0] = face_aux[0];
+            face[4][3] = face_aux[1];
+        }
+
+        void roda_cub_dir(){
+            rota_costa();
+            rota_frente();
+        }
+
+        void roda_cub_cima(){
+            rota_dir();
+            rota_esq();
         }
 };
 
@@ -81,8 +141,9 @@ int main(){
     Cubo cub;
     // face 0= branco face 1= vermelho face 2=amarelo face 3=laranja face 4=azul face 5=verde
     cout<<"Cubo:\n";
-    cub.rota_frente();
+    cub.roda_cub_dir();
     cub.printar();
+
 
     return 0;
 }
