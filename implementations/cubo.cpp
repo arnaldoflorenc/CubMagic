@@ -35,14 +35,13 @@ bool Cubo::resolvido(){
 }
 
 string Cubo::transfString(){
-    string transform;
-    transform.reserve(24);
-    for(int i = 0; i < 6; i++){
-        for(int j = 0; j < 4; j++){
-            transform.push_back(face[i][j]);
+    string estado;
+    for (const auto &face : face) {
+        for (char cor : face) {
+            estado.push_back(cor);
         }
     }
-    return transform;
+    return estado;
 }
 
 void Cubo::rota_frente(){
@@ -158,4 +157,6 @@ void Cubo::rota_cub_cima(){
 void Cubo::embaralha(){
     rota_costa();
     rota_dir();
+    rota_cub_dir();
+    rota_frente();
 }
