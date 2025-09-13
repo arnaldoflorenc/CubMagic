@@ -4,6 +4,7 @@
 #include <string>
 #include <functional>
 #include <stack>
+#include <queue>
 #include <unordered_set>
 
 vector<M> get_moves(){
@@ -12,20 +13,20 @@ vector<M> get_moves(){
         {"C", [](Cubo& c){c.rota_costa(); },1},
         {"D", [](Cubo& c){c.rota_dir(); },1},
         {"E", [](Cubo& c){c.rota_esq(); },1},
-        {"Y", [](Cubo& c){c.rota_cub_cima(); },2},
-        {"X", [](Cubo& c){c.rota_cub_dir(); },2}
+        {"Y", [](Cubo& c){c.rota_cub_cima(); },1},
+        {"X", [](Cubo& c){c.rota_cub_dir(); },1}
     };
 }
 
-vector<string> cubo_resolve(Cubo inicio){ //busca uma solução enquanto n tiver chego no limite estabelecido
+vector<string> DFS(Cubo inicio){ //busca uma solução enquanto n tiver chego no limite estabelecido
     auto movimentos = get_moves();
     unordered_set<string> visitados;
 
-    stack<E> pilha;
+    stack<N> pilha;
     pilha.push({inicio, 0, {}});
 
     while(!pilha.empty()){
-        E estado_atual =  pilha.top();
+        N estado_atual =  pilha.top();
         pilha.pop();
         
         
@@ -52,8 +53,43 @@ vector<string> cubo_resolve(Cubo inicio){ //busca uma solução enquanto n tiver
 
             vector<string> n_caminho = estado_atual.caminho;
             n_caminho.push_back(mov.mov);
-            pilha.push(E{prox, estado_atual.profund + mov.custo, n_caminho});
+            pilha.push(N{prox, estado_atual.profund + mov.custo, n_caminho});
         }
     }    
+    return {};
+}
+
+vector<string> BFS(Cubo inicio){
+    auto movimentos = get_moves();
+    unordered_set<string> visitados;
+
+    queue<N> gila;
+    gila.push({inicio, 0, {}});
+    while(!gila.empty()){
+        N no_atual = gila.front();
+        gila.pop();
+        if(no_atual.cube.resolvido()){
+            return no_atual.caminho;
+        }
+
+        if(no_atual.profund >= 13){
+            continue;
+        }
+
+        string no = no_atual.cube.transfString();
+        if(visitados.count(no)){
+            continue;
+        }
+        visitados.insert(no);
+
+        for(auto &mov : movimentos){
+            Cubo prox = no_atual.cube;
+            mov.acao(prox);
+
+            vector<string> n_caminho = no_atual.caminho;
+            n_caminho.push_back(mov.mov);
+            gila.push(N{prox, no_atual.profund + mov.custo, n_caminho});
+        }
+    }
     return {};
 }

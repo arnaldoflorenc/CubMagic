@@ -157,6 +157,6 @@ void Cubo::rota_cub_cima(){
 void Cubo::embaralha(){
     rota_costa();
     rota_dir();
-    rota_cub_dir();
     rota_frente();
+    rota_dir();
 }

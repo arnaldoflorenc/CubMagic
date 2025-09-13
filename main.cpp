@@ -15,7 +15,7 @@ int main(){
 
     cub.printar();
 
-    vector<string> solucao = cubo_resolve(cub);
+    vector<string> solucao = BFS(cub);
     if (!solucao.empty()){
         cout<<"\nSolução (movimentos): ";
         for (auto &m : solucao){

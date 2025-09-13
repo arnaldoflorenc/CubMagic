@@ -8,11 +8,11 @@
 #include <unordered_set>
 #include "Cubo.h"
 
-typedef struct Estado { 
+typedef struct No { 
     Cubo cube; 
     int profund; 
     vector<string> caminho; 
-}E; 
+}N; 
 
 typedef struct Movimetos{
     string mov;
@@ -21,6 +21,7 @@ typedef struct Movimetos{
 }M;
 
 vector<M> get_moves(); 
-vector<string> cubo_resolve(Cubo inicio);
+vector<string> DFS(Cubo inicio);
+vector<string> BFS(Cubo inicio);
 
 #endif
