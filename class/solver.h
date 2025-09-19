@@ -4,17 +4,24 @@
 #include <vector>
 #include <string>
 #include <functional>
-#include <utility>
+#include <stack>
+#include <unordered_set>
 #include "Cubo.h"
-using namespace std;
 
-typedef struct Estado {
-    Cubo cube;
-    int profund;
-    vector<string> caminho;
-}E;
+typedef struct No { 
+    Cubo cube; 
+    int profund; 
+    vector<string> caminho; 
+}N; 
 
-vector<pair<string, function<void(Cubo&)>>> get_moves();
-vector<string> cubo_resolve(Cubo inicio);
+typedef struct Movimetos{
+    string mov;
+    function<void(Cubo&)> acao;
+    int custo;
+}M;
+
+vector<M> get_moves(); 
+vector<string> DFS(Cubo inicio);
+vector<string> BFS(Cubo inicio);
 
 #endif
