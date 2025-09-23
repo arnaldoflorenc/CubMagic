@@ -15,7 +15,7 @@ int main(){
 
     cub.printar();
 
-    vector<int> solucao = BFS(cub,  1000000, 4);
+    vector<int> solucao = Aestrela(cub,  1000000, 4);
     if (!solucao.empty()){
         cout<<"\nSolução (movimentos): ";
         for (auto &m : solucao){

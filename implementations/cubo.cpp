@@ -45,30 +45,6 @@ bool Cubo::resolvido(){
     return true;
 }
 
-string Cubo::transfString(){
-    string estado;
-    for (const auto &face : face) {
-        for (char cor : face) {
-            estado.push_back(cor);
-        }
-    }
-    return estado;
-}
-
-string Cubo::transfStringCanonical() {
-    string estado;
-
-    for (int i = 0; i < 6; i++) {
-        string face_str;
-        for (int j = 0; j < 4; j++) {
-            face_str += face[i][j];
-        }
-        sort(face_str.begin(), face_str.end());
-        estado += face_str;
-    }
-    return estado;
-}
-
 void Cubo::rota_frente(){
     char aux = face[0][0];
     //face
@@ -244,9 +220,5 @@ void Cubo::rota_cub_cima(){
 }
 
 void Cubo::embaralha(){
-    rota_costa();
-    rota_topo();
-    rota_costa();
-    rota_costa();
-    rota_dir();
-}
+    rota_frente();
+}   

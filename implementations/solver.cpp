@@ -8,6 +8,7 @@
 #include <memory>
 #include <queue>
 #include <unordered_set>
+#include <list>
 #include "../class/bloom.h"
 
 using namespace std;
@@ -107,6 +108,57 @@ vector<int> BFS(Cubo inicio, size_t bloomSize = 4000000, int bloomHashes = 5){
             Cubo prox = no_atual->cube;
             mov.acao(prox);
             gila.push(make_shared<N>(N{prox, no_atual->profund + mov.custo, mov.mov, no_atual}));
+        }
+    }
+    return {};
+}
+
+vector<int> Aestrela(Cubo inicio, size_t bloomSize, int bloomHashes) {
+    auto movimentos = get_moves();
+    bloom bloomFilter(bloomSize, bloomHashes);
+    unordered_set<size_t> exactSet;
+    size_t exactSetInsertions = 0;
+    const size_t exactSetMaxSize = 100000;
+    list<shared_ptr<A>> openList;
+    openList.push_back(make_shared<A>(inicio, 0, -1, nullptr, 0, 0, 0));
+    while (!openList.empty()) {
+        auto no_atual = openList.front();
+        openList.pop_front();
+
+        if (no_atual->cube.resolvido()) {
+            return reconstruir_caminho(static_pointer_cast<N>(no_atual));
+        }
+        if (no_atual->g >= 14) {
+            continue;
+        }
+
+        size_t estado_hash = no_atual->cube.hash();
+        // Controle de visitados: só expanda se nunca viu esse estado
+        if (bloomFilter.mightContain(estado_hash) && exactSet.count(estado_hash)) {
+            continue;
+        }
+        bloomFilter.insert(estado_hash);
+        exactSet.insert(estado_hash);
+        exactSetInsertions++;
+        if (exactSetInsertions >= exactSetMaxSize) {
+            exactSet.clear();
+            exactSetInsertions = 0;
+        }
+
+        for (auto &mov : movimentos) {
+            if (no_atual->mov != -1 && mov.mov == inverso(no_atual->mov)) continue;
+            Cubo prox = no_atual->cube;
+            mov.acao(prox);
+            int g = no_atual->g + mov.custo;
+            int h = 0; // Use h=0 para garantir funcionamento, depois melhore a heurística
+            int j = g + h;
+            auto novo_no = make_shared<A>(prox, no_atual->profund + 1, mov.mov, no_atual, h, g, j);
+            // Insere ordenado por j (f = g + h)
+            auto it = openList.begin();
+            while (it != openList.end() && (*it)->j <= novo_no->j) {
+                ++it;
+            }
+            openList.insert(it, novo_no);
         }
     }
     return {};
