@@ -1,4 +1,5 @@
 #include <iostream>
+#include <algorithm>
 #include "../class/Cubo.h"
 using namespace std;
 
@@ -9,6 +10,16 @@ Cubo::Cubo(){
                 face[i][j] = cor[i];
             }
         }
+}
+
+size_t Cubo::hash() const{
+    size_t resultado = 2166136261U; 
+    for(int i = 0; i < 6; i++){
+        for(int j = 0; j < 4; j++){
+            resultado = (resultado ^ face[i][j]) * 16777619U;
+        }
+    }
+    return resultado;
 }
 
 void Cubo::printar() const {
@@ -44,104 +55,182 @@ string Cubo::transfString(){
     return estado;
 }
 
+string Cubo::transfStringCanonical() {
+    string estado;
+
+    for (int i = 0; i < 6; i++) {
+        string face_str;
+        for (int j = 0; j < 4; j++) {
+            face_str += face[i][j];
+        }
+        sort(face_str.begin(), face_str.end());
+        estado += face_str;
+    }
+    return estado;
+}
+
 void Cubo::rota_frente(){
     char aux = face[0][0];
     //face
-    face[0][0] = face[0][3];
-    face[0][3] = face[0][2];
-    face[0][2] = face[0][1];
+    face[0][0] = face[0][2];
+    face[0][2] = face[0][3];
+    face[0][3] = face[0][1];
     face[0][1] = aux;
     //laterais
-    array<char,2> face_aux;
-    face_aux[0] = face[3][2];
-    face_aux[1] = face[3][1];
-    //-baixo para esquerda
-    face[3][1] = face[5][3];
-    face[3][2] = face[5][2];
-    //-dir para baixo
+    char temp1 = face[4][1];
+    char temp2 = face[4][2];
+    //-esquerda para cima
+    face[4][1] = face[3][2];
+    face[4][2] = face[3][0];
+    //-baixo para esq
+    face[3][0] = face[5][2];
+    face[3][2] = face[5][1];
+    //-direita para baixo
+    face[5][1] = face[1][3];
     face[5][2] = face[1][0];
-    face[5][3] = face[1][3];
-    //-topo para dir
-    face[1][0] = face[4][3];
-    face[1][3] = face[4][2];
     //-esq para topo
-    face[4][3] = face_aux[0];
-    face[4][2] = face_aux[1];
+    face[1][0] = temp1;
+    face[1][3] = temp2;
 }
 
-void Cubo::rota_costa(){
+void Cubo::rota_costa() {
     char aux = face[2][0];
-    //face
-    face[2][0] = face[2][3];
-    face[2][3] = face[2][2];
-    face[2][2] = face[2][1];
+    face[2][0] = face[2][2];
+    face[2][2] = face[2][3];
+    face[2][3] = face[2][1];
     face[2][1] = aux;
-    //laterais
-    array<char,2> face_aux;
-    face_aux[0] = face[3][0];
-    face_aux[1] = face[3][3];
-    //-baixo para esquerda
-    face[3][0] = face[5][0];
-    face[3][3] = face[5][1];
-    //-dir para baixo
-    face[5][1] = face[1][1];
-    face[5][0] = face[1][2];
-    //-topo para dir
-    face[1][1] = face[4][0];
-    face[1][2] = face[4][1];
-    //-esq para topo
-    face[4][1] = face_aux[0];
-    face[4][0] = face_aux[1];
+    
+    //topo
+    char temp1 = face[4][0];
+    char temp2 = face[4][3];
+    
+    //direita para topo
+    face[4][0] = face[1][1];
+    face[4][3] = face[1][2];
+    
+    //baixo para dir
+    face[1][1] = face[5][3];
+    face[1][2] = face[5][0];
+    
+    //esq para baixo
+    face[5][0] = face[3][3];
+    face[5][3] = face[3][1];
+    
+    //topo para esq
+    face[3][1] = temp1;
+    face[3][3] = temp2;
 }
 
-void Cubo::rota_dir(){
+void Cubo::rota_dir() {
     char aux = face[1][0];
-    //face
-    face[1][0] = face[1][3];
-    face[1][3] = face[1][2];
-    face[1][2] = face[1][1];
+    face[1][0] = face[1][2];
+    face[1][2] = face[1][3];
+    face[1][3] = face[1][1];
     face[1][1] = aux;
-    //laterais
-    array<char,2> face_aux;
-    face_aux[0] = face[0][1];
-    face_aux[1] = face[0][2];
-    //-baixo para frente
-    face[0][2] = face[5][1];
-    face[0][1] = face[5][2];
-    //-fundo para baixo
-    face[5][1] = face[2][0];
-    face[5][2] = face[2][3];
-    //-topo para fundo
-    face[2][3] = face[4][1];
-    face[2][0] = face[4][2];
-    //-frente para topo
-    face[4][1] = face_aux[0];
-    face[4][2] = face_aux[1];
+    
+    //dir
+    char temp1 = face[0][1];
+    char temp2 = face[0][2];
+    
+    //topo para frente 
+    face[0][1] = face[4][1];
+    face[0][2] = face[4][2];
+    
+    //costa para topo
+    face[4][1] = face[2][0];
+    face[4][2] = face[2][3];
+    
+    //baixo para costa
+    face[2][0] = face[5][1];
+    face[2][3] = face[5][2];
+    
+    //frente para baixo
+    face[5][1] = temp1;
+    face[5][2] = temp2;
 }
 
-void Cubo::rota_esq(){
+void Cubo::rota_esq() {
     char aux = face[3][0];
-    //face
-    face[3][0] = face[3][1];
-    face[3][1] = face[3][2];
+    face[3][0] = face[3][2];
     face[3][2] = face[3][3];
-    face[3][3] = aux;
-    //laterais
-    array<char,2> face_aux;
-    face_aux[0] = face[0][0];
-    face_aux[1] = face[0][3];
-    //-baixo para frente
-    face[0][3] = face[5][0];
-    face[0][0] = face[5][3];
-    //-fundo para baixo
+    face[3][3] = face[3][1];
+    face[3][1] = aux;
+    
+    //salva esq
+    char temp1 = face[0][0];
+    char temp2 = face[0][3];
+    
+    //baixo para frente
+    face[0][0] = face[5][0];
+    face[0][3] = face[5][3];
+    
+    //costas para baixo
     face[5][0] = face[2][1];
     face[5][3] = face[2][2];
-    //-topo para fundo
-    face[2][2] = face[4][0];
-    face[2][1] = face[4][3];
-    //-frente para topo
-    face[4][0] = face_aux[0];
-    face[4][3] = face_aux[1];
+    
+    //topo par costas
+    face[2][1] = face[4][0];
+    face[2][2] = face[4][3];
+    
+    //frente para topo
+    face[4][0] = temp1;
+    face[4][3] = temp2;
+}
+
+void Cubo::rota_topo() {
+    char aux = face[4][0];
+    face[4][0] = face[4][2];
+    face[4][2] = face[4][3];
+    face[4][3] = face[4][1];
+    face[4][1] = aux;
+    
+    //topo
+    char temp1 = face[0][0];
+    char temp2 = face[0][1];
+    
+    //dir para frente
+    face[0][0] = face[1][0];
+    face[0][1] = face[1][1];
+    
+    //costa para dir
+    face[1][0] = face[2][0];
+    face[1][1] = face[2][1];
+    
+    //esq para costa
+    face[2][0] = face[3][0];
+    face[2][1] = face[3][1];
+    
+    //frente para esq
+    face[3][0] = temp1;
+    face[3][1] = temp2;
+}
+
+void Cubo::rota_base() {
+    char aux = face[5][0];
+    face[5][0] = face[5][2];
+    face[5][2] = face[5][3];
+    face[5][3] = face[5][1];
+    face[5][1] = aux;
+    
+    //frente
+    char temp1 = face[0][2];
+    char temp2 = face[0][3];
+    
+    //esq para frente
+    face[0][2] = face[3][2];
+    face[0][3] = face[3][3];
+    
+    //tras para esq
+    face[3][2] = face[2][2];
+    face[3][3] = face[2][3];
+    
+    //direita para tras
+    face[2][2] = face[1][2];
+    face[2][3] = face[1][3];
+    
+    // frente para dir
+    face[1][2] = temp1;
+    face[1][3] = temp2;
 }
 
 void Cubo::rota_cub_dir(){
@@ -156,7 +245,8 @@ void Cubo::rota_cub_cima(){
 
 void Cubo::embaralha(){
     rota_costa();
-    rota_dir();
-    rota_frente();
+    rota_topo();
+    rota_costa();
+    rota_costa();
     rota_dir();
 }

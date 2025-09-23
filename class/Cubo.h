@@ -13,11 +13,15 @@ class Cubo{
     public:
         Cubo();
 
+        size_t hash() const;
+
         void printar() const;
 
         bool resolvido();
 
         string transfString();
+
+        string transfStringCanonical();
 
         void rota_frente();
 
@@ -30,6 +34,10 @@ class Cubo{
         void rota_cub_dir();
 
         void rota_cub_cima();
+
+        void rota_topo();
+        
+        void rota_base();
 
         void embaralha();
 };

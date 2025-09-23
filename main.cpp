@@ -15,7 +15,7 @@ int main(){
 
     cub.printar();
 
-    vector<string> solucao = BFS(cub);
+    vector<int> solucao = BFS(cub,  1000000, 4);
     if (!solucao.empty()){
         cout<<"\nSolução (movimentos): ";
         for (auto &m : solucao){
@@ -27,18 +27,18 @@ int main(){
     }
 
     for(const auto& monta_aux : solucao){
-        if(monta_aux == "F"){
+        if(monta_aux == 0){
             cub.rota_frente();
-        }else if(monta_aux == "C"){
+        }else if(monta_aux == 1){
             cub.rota_costa();
-        }else if(monta_aux == "D"){
+        }else if(monta_aux == 2){
             cub.rota_dir();
-        }else if(monta_aux == "E"){
+        }else if(monta_aux == 3){
             cub.rota_esq();
-        }else if(monta_aux == "X"){
-            cub.rota_cub_dir();
+        }else if(monta_aux == 4){
+            cub.rota_topo();
         }else{
-            cub.rota_cub_cima();
+            cub.rota_base();
         }
     }
     cub.printar();
