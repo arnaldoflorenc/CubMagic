@@ -15,23 +15,23 @@
 using namespace std;
 
 typedef struct No { 
-    Cubo cube; 
+    shared_ptr<Cubo> cube; 
     int profund; 
     int mov;
     shared_ptr<No> anterior; 
-}N; 
+}N;
 
 typedef struct Movimetos{
     int mov;
-    function<void(Cubo&)> acao;
+    void (*acao)(Cubo&);
     int custo;
 }M;
 
 
 vector<M> get_moves();
 int inverso(int mov);
-vector<int> DFS(Cubo inicio, size_t bloomSize, int bloomHashes);
-vector<int> BFS(Cubo inicio, size_t bloomSize, int bloomHashes);
+vector<int> DFS(Cubo inicio);
+vector<int> BFS(Cubo inicio, int limite);
 vector<int> reconstruir_caminho(shared_ptr<N> no_final);
 vector<string> converter_movimentos(const vector<int>& caminho);
 

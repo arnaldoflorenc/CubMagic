@@ -8,10 +8,15 @@ using namespace std;
 class Cubo{
     private: 
         array<array<char,4>,6> face;
+        size_t hash_atual;
         int custo_mov;
 
     public:
         Cubo();
+
+        void atualiza_hash();
+
+        void aplica_movimento(int mov);
 
         size_t hash() const;
 
