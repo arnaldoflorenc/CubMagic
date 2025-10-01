@@ -5,23 +5,49 @@
 #include <string>
 using namespace std;
 
-class Cubo {
-private: 
-    array<array<char,4>,6> face;
-    int custo_mov;
+class Cubo{
+    private: 
+        array<array<char,4>,6> face;
+        size_t hash_atual;
+        int custo_mov;
 
-public:
-    Cubo();                 
-    void printar() const;
-    bool resolvido();
-    string transfString();
-    void rota_frente();
-    void rota_costa();
-    void rota_dir();
-    void rota_esq();
-    void rota_cub_dir();
-    void rota_cub_cima();
-    void embaralha();
+    public:
+        Cubo();
+
+        void atualiza_hash();
+
+        char getFaceChar(int face_index, int idx) const;
+
+        char getFaceColor(int face, int pos) const;
+
+        void aplica_movimento(int mov);
+
+        size_t hash() const;
+
+        void printar() const;
+
+        bool resolvido() const;
+
+        string transfString() const;
+
+        string transfStringCanonical() const;
+
+        void rota_frente();
+
+        void rota_costa();
+
+        void rota_dir();
+
+        void rota_esq();
+
+        void rota_cub_dir();
+
+        void rota_cub_cima();
+
+        void rota_topo();
+        
+        void rota_base();
+
+        void embaralha();
 };
-
-#endif // CUBO_H
+#endif

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <algorithm>
+#include <string>
 #include "../class/Cubo.h"
 using namespace std;
 
@@ -28,6 +29,31 @@ void Cubo::atualiza_hash() {
     hash_atual = h;
 }
 
+// Retorna todas as cores do cubo em uma string de 24 caracteres
+string Cubo::transfString() const {
+    string s = "";
+    for(int i = 0; i < 6; i++){
+        for(int j = 0; j < 4; j++){
+            s += face[i][j];
+        }
+    }
+    return s;
+}
+
+
+string Cubo::transfStringCanonical() const {
+    return transfString();
+}
+
+char Cubo::getFaceChar(int face_index, int idx) const {
+    return face[face_index][idx];
+}
+
+char Cubo::getFaceColor(int face, int pos) const {
+    return this->face[face][pos];
+}
+
+
 void Cubo::aplica_movimento(int mov) {
     switch(mov) {
         case 0: rota_frente(); break;
@@ -51,7 +77,7 @@ void Cubo::printar() const {
     cout<<endl;
 }
 
-bool Cubo::resolvido(){
+bool Cubo::resolvido() const{
     for(int i = 0; i < 6; i++){
         char cor = face[i][0];
         for(int j = 0; j < 4; j++){
