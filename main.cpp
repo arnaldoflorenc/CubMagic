@@ -179,7 +179,7 @@ int main() {
 
                 // Resolver animado usando BFS real
                 if(event.key.code == sf::Keyboard::R) {
-                    vector<int> solucao = BFS(cubo, 1 << 20, 3); 
+                    vector<int> solucao = BFS(cubo);
                     if(solucao.empty()) {
                         cout << "Cubo já está resolvido!" << endl;
                     } else {
@@ -208,7 +208,7 @@ int main() {
                 // Resolver animado usando DFS
                 if(event.key.code == sf::Keyboard::Y) {
                     cout << "DFS iniciando..." << endl;
-                    vector<int> solucao = DFS(cubo, 1 << 20, 3);  // chama DFS
+                    vector<int> solucao = DFS(cubo);
                     if(solucao.empty()) {
                         cout << "Cubo já está resolvido ou não foi encontrada solução!" << endl;
                     } else {
@@ -220,42 +220,6 @@ int main() {
                     }
                 }
 
-                // Debug
-                if(event.key.code == sf::Keyboard::D) {
-                    cout << "== Teste de rotações iniciado ==\n";
-                    Cubo original = cubo;
-                    original.printStickerCounts();
-                    cout << "validar original: " << (original.validar_stickers() ? "OK" : "FALHA") << endl;
-
-                    struct Test { string name; function<void(Cubo&)> f; function<void(Cubo&)> inv; };
-                    vector<Test> tests = {
-                        {"F", [](Cubo& c){ c.rota_frente(); }, [](Cubo& c){ c.rota_costa(); }},
-                        {"B", [](Cubo& c){ c.rota_costa(); }, [](Cubo& c){ c.rota_frente(); }}, // if B is rota_costa
-                        {"R", [](Cubo& c){ c.rota_dir(); }, [](Cubo& c){ c.rota_esq(); }},
-                        {"L", [](Cubo& c){ c.rota_esq(); }, [](Cubo& c){ c.rota_dir(); }},
-                        {"U", [](Cubo& c){ c.rota_topo(); }, [](Cubo& c){ c.rota_base(); }},
-                        {"D", [](Cubo& c){ c.rota_base(); }, [](Cubo& c){ c.rota_topo(); }}
-                    };
-
-                    for(auto &t : tests){
-                        cout << "\nTeste rot " << t.name << ":\n";
-                        Cubo c = original;
-                        t.f(c);
-                        cout << " - apos rot: validar_stickers = " << (c.validar_stickers() ? "OK":"FALHA") << endl;
-                        c.printStickerCounts();
-
-                        // checar rot seguida da inversa
-                        t.inv(c);
-                        cout << " - apos rot + inv: igual original = " << (c.igual(original) ? "OK":"FALHA") << endl;
-
-                        // checar rot 4x = identidade
-                        Cubo c2 = original;
-                        for(int i=0;i<4;i++) t.f(c2);
-                        cout << " - rot x4: igual original = " << (c2.igual(original) ? "OK":"FALHA") << endl;
-                    }
-
-                    cout << "== Fim dos testes ==\n";
-                }
             }
         }
 
