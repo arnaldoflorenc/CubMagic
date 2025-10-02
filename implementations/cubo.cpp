@@ -13,13 +13,25 @@ Cubo::Cubo(){
 }
 
 size_t Cubo::hash() const{
-    size_t resultado = 2166136261U; 
+    size_t resultado = 0; 
     for(int i = 0; i < 6; i++){
         for(int j = 0; j < 4; j++){
-            resultado = (resultado ^ face[i][j]) * 16777619U;
+            resultado ^= std::hash<char>{}(face[i][j]) + 0x9e3779b9 + (resultado << 6) + (resultado >> 2);
         }
     }
     return resultado;
+}
+
+string Cubo::transfStringCanonical() const {
+    string result;
+    result.reserve(24); // 6 faces * 4 elementos = 24 caracteres
+    
+    for(int i = 0; i < 6; i++) {
+        for(int j = 0; j < 4; j++) {
+            result += face[i][j];
+        }
+    }
+    return result;
 }
 
 void Cubo::printar() const {
@@ -33,7 +45,7 @@ void Cubo::printar() const {
     cout<<endl;
 }
 
-bool Cubo::resolvido(){
+bool Cubo::resolvido() const {
     for(int i = 0; i < 6; i++){
         char cor = face[i][0];
         for(int j = 0; j < 4; j++){
@@ -209,16 +221,9 @@ void Cubo::rota_base() {
     face[1][3] = temp2;
 }
 
-void Cubo::rota_cub_dir(){
-    rota_costa();
-    rota_frente();
-}
-
-void Cubo::rota_cub_cima(){
-    rota_dir();
-    rota_esq();
-}
-
 void Cubo::embaralha(){
     rota_frente();
+    rota_dir();
+    rota_topo();
+    rota_costa();
 }   

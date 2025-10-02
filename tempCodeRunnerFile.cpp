@@ -1,1 +1,0 @@
- cub.rota_frente();
