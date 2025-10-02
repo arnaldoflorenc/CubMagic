@@ -119,20 +119,20 @@ vector<int> BFS(Cubo inicio, size_t bloomSize = 4000000, int bloomHashes = 5){
     }
     return {};
 }
-
+// Classe para gerenciar as heurísticas
 class Heuristica2x2 {
 private:
-    unordered_map<size_t, int> patternDB;
-    const size_t MAX_DB_SIZE = 50000;
+    unordered_map<size_t, int> patternDB; // Tabela de consulta para padrões
+    const size_t MAX_DB_SIZE = 50000; // Limite de tamanho da tabela
     
     // Heurística baseada em posições e orientações dos cantos
-    int calculateCornerHeuristic(const Cubo& cube) const {
-        int heuristic = 0;
+    int calculateCornerHeuristic(const Cubo& cube) const { 
         
-        // 1. CANTOS NA POSIÇÃO CORRETA - peso maior
+        int heuristic = 0;
         int correctCorners = 0;
         int orientedCorners = 0;
-        
+
+        // Conta cantos corretos e orientados
         for (int i = 0; i < 8; i++) {
             if (cube.isCornerCorrect(i)) {
                 correctCorners++;
@@ -141,15 +141,14 @@ private:
                 }
             }
         }
-        
+        // Combina os fatores na heurística
         heuristic += (8 - correctCorners) * 3; // Peso maior para posição
         heuristic += (8 - orientedCorners) * 1; // Peso menor para orientação
         
-        // 2. BÔNUS para grupos de cantos resolvidos
-        // Cantos adjacentes resolvidos indicam faces parcialmente resolvidas
+        // Bônus se cantos opostos estiverem corretos
         int bonus = 0;
         
-        // Verifica se cantos opostos estão resolvidos (indicador de progresso)
+        // Verifica se cantos opostos estão resolvidos
         if (cube.isCornerCorrect(0) && cube.isCornerCorrect(2)) bonus -= 1;
         if (cube.isCornerCorrect(1) && cube.isCornerCorrect(3)) bonus -= 1;
         if (cube.isCornerCorrect(4) && cube.isCornerCorrect(6)) bonus -= 1;
@@ -160,7 +159,7 @@ private:
         return max(1, heuristic);
     }
     
-    // Heurística alternativa mais agressiva
+    // Cálculo da Heurística 
     int calculateAdvancedHeuristic(const Cubo& cube) const {
         int h1 = calculateCornerHeuristic(cube);
         
@@ -168,7 +167,7 @@ private:
         int manhattan = 0;
         for (int i = 0; i < 8; i++) {
             if (!cube.isCornerCorrect(i)) {
-                manhattan += 1; // Distância simplificada
+                manhattan += 1; // Cada canto fora do lugar adiciona 1
             }
         }
         
@@ -177,6 +176,7 @@ private:
     }
     
 public:
+    // Função para obter a heurística
     int getHeuristic(const Cubo& cube) {
         // Usa o hash do cubo como chave
         size_t patternKey = cube.hash();
@@ -200,17 +200,18 @@ public:
 };
 
 Heuristica2x2 he;
-
+// Função obter a heurística
 int heuristica(Cubo &cube) {
     return he.getHeuristic(cube);
 }
-
+// Implementação do algoritmo A*
 vector<int> Aestrela(Cubo inicio) {
     auto movimentos = get_moves();
-    
+    // Mapa para armazenar o melhor custo g para cada estado
     unordered_map<size_t, int> best_g;
     best_g.reserve(500000);
-    
+
+    // Comparador para a priority_queue
     auto comparador = [](const shared_ptr<AestrelaNo>& a, const shared_ptr<AestrelaNo>& b) {
         return a->f > b->f;
     };
@@ -221,12 +222,13 @@ vector<int> Aestrela(Cubo inicio) {
     auto no_inicial = make_shared<AestrelaNo>(inicio, 0, -1, nullptr, h_inicial, 0);
     best_g[inicio.hash()] = 0;
     openList.push(no_inicial);
-    
+
+    // Contadores e limites
     int nos_expandidos = 0;
-    const int MAX_PROFUNDIDADE = 50;
+    const int MAX_PROFUNDIDADE = 17;
     
     cout << "A* Iniciando..." << endl;
-
+    // Loop principal do A*
     while (!openList.empty()) {
         auto no_atual = openList.top();
         openList.pop();
@@ -238,20 +240,23 @@ vector<int> Aestrela(Cubo inicio) {
         if (best_g[hash_atual] < no_atual->g) {
             continue;
         }
-        
+
+        // Verifica se é solução
         if (no_atual->cube.resolvido()) {
             cout << "SOLUÇÃO ENCONTRADA!" << endl;
             cout << "Nós expandidos: " << nos_expandidos << ", Movimentos: " << no_atual->g << endl;
             return reconstruir_caminho(static_pointer_cast<No>(no_atual));
         }
-        
+        // Limita profundidade
         if (no_atual->g >= MAX_PROFUNDIDADE) {
             continue;
         }
-        
+
+        // Expansão dos nós
         Cubo cubo_base = no_atual->cube;
         int mov_anterior = no_atual->mov;
         
+        // Gera nós filhos
         for (auto &mov : movimentos) {
             // Evita movimento inverso ao anterior
             if (mov_anterior != -1 && mov.mov == inverso(mov_anterior)) {
@@ -260,32 +265,34 @@ vector<int> Aestrela(Cubo inicio) {
             
             Cubo prox = cubo_base;
             mov.acao(prox);
-            
+            // Calcula novo custo g
             int g_novo = no_atual->g + mov.custo;
             
+            // Limita profundidade
             if (g_novo >= MAX_PROFUNDIDADE) continue;
             
             size_t prox_hash = prox.hash();
             
-            // Verifica se encontramos um caminho melhor para este estado
+            // Verifica se encontrou um caminho melhor para este estado
             auto it = best_g.find(prox_hash);
             if (it != best_g.end() && it->second <= g_novo) {
                 continue;
             }
             
-            // Atualiza melhor custo e adiciona à fila
+            // Atualiza melhor custo e adiciona à fila de prioridade
             best_g[prox_hash] = g_novo;
             int h_novo = heuristica(prox);
             
+            // Cria novo nó A*
             auto novo_no = make_shared<AestrelaNo>(
                 prox, no_atual->profund + 1, mov.mov, 
                 static_pointer_cast<No>(no_atual), h_novo, g_novo
             );
-            
+
             openList.push(novo_no);
         }
         
-        // Log periódico para debug
+        // Debug
         if (nos_expandidos % 10000 == 0) {
             cout << "Nós expandidos: " << nos_expandidos 
                  << ", Fila: " << openList.size() 
@@ -293,6 +300,7 @@ vector<int> Aestrela(Cubo inicio) {
         }
     }
     
+    // Nenhuma solução encontrada
     cout << "Não encontrou solução após " << nos_expandidos << " nós expandidos" << endl;
     return {};
 }

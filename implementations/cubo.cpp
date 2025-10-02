@@ -205,17 +205,11 @@ int Cubo::countOrientedCorners() const {
 }
 
 int Cubo::countSolvedFaces() const {
-    // Para um cubo 2x2, uma face está resolvida se seus 4 cantos
-    // estão nas posições corretas E com orientações corretas
-    // Esta é uma aproximação simplificada
     int solved = 0;
     
-    // Verifica cada "face" virtual baseada nos cantos
-    // Esta é uma heurística simplificada
     int correctCount = countCorrectCorners();
     if (correctCount == 8) return 6; // Cubo totalmente resolvido
     
-    // Aproximação: se muitos cantos estão corretos, algumas faces podem estar resolvidas
     if (correctCount >= 6) return 2;
     if (correctCount >= 4) return 1;
     
@@ -228,7 +222,7 @@ array<array<char, 4>, 6> Cubo::para_faces() const {
     // Cores fixas para cada face no estado resolvido
     char cores_faces[6] = {'W', 'R', 'Y', 'O', 'B', 'G'};
     
-    // Para debug: mostrar números dos cantos em cada posição
+    // Debug 
     for (int i = 0; i < 6; i++) {
         for (int j = 0; j < 4; j++) {
             // Mostrar qual canto está em cada posição
