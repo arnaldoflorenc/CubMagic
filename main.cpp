@@ -172,13 +172,14 @@ int main() {
 
                 // Embaralhar instantâneo
                 if(event.key.code == sf::Keyboard::S) {
-                    cubo.embaralha();
+                    cubo.embaralha(); // ou cubo.embaralha(); dependendo da função
                     cout << "Cubo embaralhado!" << endl;
                 }
 
+
                 // Resolver animado usando BFS real
                 if(event.key.code == sf::Keyboard::R) {
-                    vector<int> solucao = BFS(cubo, 20);
+                    vector<int> solucao = BFS(cubo, 1 << 20, 3); 
                     if(solucao.empty()) {
                         cout << "Cubo já está resolvido!" << endl;
                     } else {
@@ -187,6 +188,58 @@ int main() {
                         }
                         cout << "Cubo resolvido!" << endl;
                     }
+                }
+
+                // Resolver animado usando A*
+                if(event.key.code == sf::Keyboard::T) {
+                    cout << "A* iniciando..." << endl;
+                    vector<int> solucao = Aestrela(cubo);
+                    if(solucao.empty()) {
+                        cout << "Cubo já está resolvido ou não foi possível achar solução!" << endl;
+                    } else {
+                        cout << "Animando solução..." << endl;
+                        for(int m : solucao) {
+                            animaMovimento(cubo, m, window, 1.0f, 0.05f);
+                        }
+                        cout << "Cubo resolvido com A*!" << endl;
+                    }
+                }
+
+                // Debug
+                if(event.key.code == sf::Keyboard::D) {
+                    cout << "== Teste de rotações iniciado ==\n";
+                    Cubo original = cubo;
+                    original.printStickerCounts();
+                    cout << "validar original: " << (original.validar_stickers() ? "OK" : "FALHA") << endl;
+
+                    struct Test { string name; function<void(Cubo&)> f; function<void(Cubo&)> inv; };
+                    vector<Test> tests = {
+                        {"F", [](Cubo& c){ c.rota_frente(); }, [](Cubo& c){ c.rota_costa(); }},
+                        {"B", [](Cubo& c){ c.rota_costa(); }, [](Cubo& c){ c.rota_frente(); }}, // if B is rota_costa
+                        {"R", [](Cubo& c){ c.rota_dir(); }, [](Cubo& c){ c.rota_esq(); }},
+                        {"L", [](Cubo& c){ c.rota_esq(); }, [](Cubo& c){ c.rota_dir(); }},
+                        {"U", [](Cubo& c){ c.rota_topo(); }, [](Cubo& c){ c.rota_base(); }},
+                        {"D", [](Cubo& c){ c.rota_base(); }, [](Cubo& c){ c.rota_topo(); }}
+                    };
+
+                    for(auto &t : tests){
+                        cout << "\nTeste rot " << t.name << ":\n";
+                        Cubo c = original;
+                        t.f(c);
+                        cout << " - apos rot: validar_stickers = " << (c.validar_stickers() ? "OK":"FALHA") << endl;
+                        c.printStickerCounts();
+
+                        // checar rot seguida da inversa
+                        t.inv(c);
+                        cout << " - apos rot + inv: igual original = " << (c.igual(original) ? "OK":"FALHA") << endl;
+
+                        // checar rot 4x = identidade
+                        Cubo c2 = original;
+                        for(int i=0;i<4;i++) t.f(c2);
+                        cout << " - rot x4: igual original = " << (c2.igual(original) ? "OK":"FALHA") << endl;
+                    }
+
+                    cout << "== Fim dos testes ==\n";
                 }
             }
         }

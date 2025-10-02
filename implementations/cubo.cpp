@@ -18,6 +18,7 @@ size_t Cubo::hash() const{
     return hash_atual;
 }
 
+
 void Cubo::atualiza_hash() {
     size_t h = 1469598103934665603ULL; // offset basis (64-bit)
     for(int i = 0; i < 6; i++) {
@@ -42,7 +43,15 @@ string Cubo::transfString() const {
 
 
 string Cubo::transfStringCanonical() const {
-    return transfString();
+    string result;
+    result.reserve(24); // 6 faces * 4 elementos = 24 caracteres
+    
+    for(int i = 0; i < 6; i++) {
+        for(int j = 0; j < 4; j++) {
+            result += face[i][j];
+        }
+    }
+    return result;
 }
 
 char Cubo::getFaceChar(int face_index, int idx) const {
@@ -88,6 +97,52 @@ bool Cubo::resolvido() const{
     }
     return true;
 }
+
+static int colorIndex(char c){
+    switch(c){
+        case 'W': return 0;
+        case 'R': return 1;
+        case 'Y': return 2;
+        case 'O': return 3;
+        case 'B': return 4;
+        case 'G': return 5;
+        default: return -1;
+    }
+}
+
+bool Cubo::validar_stickers() const {
+    int counts[6] = {0,0,0,0,0,0};
+    for(int f=0; f<6; ++f){
+        for(int p=0; p<4; ++p){
+            int idx = colorIndex(face[f][p]);
+            if(idx < 0) return false;
+            counts[idx]++;
+        }
+    }
+    for(int i=0;i<6;++i) if(counts[i] != 4) return false;
+    return true;
+}
+
+bool Cubo::igual(const Cubo& outro) const {
+    return face == outro.face;
+}
+
+void Cubo::printStickerCounts() const {
+    int counts[6] = {0,0,0,0,0,0};
+    for(int f=0; f<6; ++f){
+        for(int p=0; p<4; ++p){
+            int idx = colorIndex(face[f][p]);
+            if(idx >= 0) counts[idx]++;
+        }
+    }
+    const char* names = "WRYOBG"; // ordem usada: W R Y O B G
+    cout << "Sticker counts: ";
+    for(int i=0;i<6;i++){
+        cout << names[i] << ":" << counts[i] << (i<5? " ":"");
+    }
+    cout << endl;
+}
+
 
 void Cubo::rota_frente(){
     array<array<char,4>,6> old_faces = face;
@@ -279,7 +334,7 @@ void Cubo::rota_base(){
 
 
 void Cubo::embaralha(){
-    rota_dir();
     rota_frente();
-    rota_topo();
-}
+    rota_dir();
+    rota_costa();
+}  

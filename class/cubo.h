@@ -3,6 +3,7 @@
 
 #include <array>
 #include <string>
+#include <functional>  // Para std::hash
 using namespace std;
 
 class Cubo{
@@ -28,6 +29,11 @@ class Cubo{
 
         bool resolvido() const;
 
+        // debug / validação
+        bool validar_stickers() const;          // true se cada cor aparece exatamente 4x
+        bool igual(const Cubo& outro) const;    // compara faces
+        void printStickerCounts() const;        // imprime contagem por cor
+
         string transfString() const;
 
         string transfStringCanonical() const;
@@ -49,5 +55,14 @@ class Cubo{
         void rota_base();
 
         void embaralha();
+
+        char getExpectedColor(int faceIndex) const {
+            static const char expected[6] = {'W','R','Y','O','B','G'};
+            return expected[faceIndex];
+        }
+
+        const array<char,4>& getFace(int faceIndex) const {
+            return face[faceIndex];
+        }
 };
 #endif
