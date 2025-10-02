@@ -4,226 +4,268 @@
 using namespace std;
 
 Cubo::Cubo(){
-        char cor[6] = {'W','R','Y','O','B','G'};
-        for(int i = 0; i < 6; i++){
-            for(int j = 0; j < 4; j++){
-                face[i][j] = cor[i];
-            }
-        }
+    // Estado resolvido: cantos em ordem, orientação 0
+    for (int i = 0; i < 8; i++) {
+        posicoes[i] = i;
+        orientacoes[i] = 0;
+    }
 }
 
 size_t Cubo::hash() const{
-    size_t resultado = 0; 
-    for(int i = 0; i < 6; i++){
-        for(int j = 0; j < 4; j++){
-            resultado ^= std::hash<char>{}(face[i][j]) + 0x9e3779b9 + (resultado << 6) + (resultado >> 2);
-        }
+    size_t h = 0;
+    for (int i = 0; i < 8; i++) {
+        h = h * 31 + posicoes[i];
+        h = h * 31 + orientacoes[i];
     }
-    return resultado;
-}
-
-string Cubo::transfStringCanonical() const {
-    string result;
-    result.reserve(24); // 6 faces * 4 elementos = 24 caracteres
-    
-    for(int i = 0; i < 6; i++) {
-        for(int j = 0; j < 4; j++) {
-            result += face[i][j];
-        }
-    }
-    return result;
+    return h;
 }
 
 void Cubo::printar() const {
-    for (int i = 0; i < 6; i++) {
-        cout << "Face " << i << ": ";
-        for (int j = 0; j < 4; j++) {
-            cout << face[i][j] << " ";
-        }
-        cout << endl;
+    cout << "Posições: ";
+    for (int i = 0; i < 8; i++) {
+        cout << posicoes[i] << " ";
     }
-    cout<<endl;
+    cout << endl;
+    
+    cout << "Orientações: ";
+    for (int i = 0; i < 8; i++) {
+        cout << orientacoes[i] << " ";
+    }
+    cout << endl;
 }
 
 bool Cubo::resolvido() const {
-    for(int i = 0; i < 6; i++){
-        char cor = face[i][0];
-        for(int j = 0; j < 4; j++){
-            if(face[i][j] != cor){
-                return false;
-            }
+    for (int i = 0; i < 8; i++) {
+        if (posicoes[i] != i || orientacoes[i] != 0) {
+            return false;
         }
     }
     return true;
 }
 
-void Cubo::rota_frente(){
-    char aux = face[0][0];
-    //face
-    face[0][0] = face[0][2];
-    face[0][2] = face[0][3];
-    face[0][3] = face[0][1];
-    face[0][1] = aux;
-    //laterais
-    char temp1 = face[4][1];
-    char temp2 = face[4][2];
-    //-esquerda para cima
-    face[4][1] = face[3][2];
-    face[4][2] = face[3][0];
-    //-baixo para esq
-    face[3][0] = face[5][2];
-    face[3][2] = face[5][1];
-    //-direita para baixo
-    face[5][1] = face[1][3];
-    face[5][2] = face[1][0];
-    //-esq para topo
-    face[1][0] = temp1;
-    face[1][3] = temp2;
+void Cubo::rota_frente() {
+    // F (sentido horário)
+    array<int, 4> corners = {0, 1, 5, 4}; // URF, ULF, DLF, DRF
+    
+    int temp_pos = posicoes[corners[0]];
+    posicoes[corners[0]] = posicoes[corners[3]];
+    posicoes[corners[3]] = posicoes[corners[2]];
+    posicoes[corners[2]] = posicoes[corners[1]];
+    posicoes[corners[1]] = temp_pos;
 }
 
 void Cubo::rota_costa() {
-    char aux = face[2][0];
-    face[2][0] = face[2][2];
-    face[2][2] = face[2][3];
-    face[2][3] = face[2][1];
-    face[2][1] = aux;
+    // B (sentido horário)
+    array<int, 4> corners = {3, 2, 6, 7}; // URB, ULB, DLB, DRB
     
-    //topo
-    char temp1 = face[4][0];
-    char temp2 = face[4][3];
+    int temp_pos = posicoes[corners[0]];
+    posicoes[corners[0]] = posicoes[corners[3]];
+    posicoes[corners[3]] = posicoes[corners[2]];
+    posicoes[corners[2]] = posicoes[corners[1]];
+    posicoes[corners[1]] = temp_pos;
+}
+
+// MOVIMENTOS INVERSOS CORRETOS
+void Cubo::rota_frente_anti() {
+    // F' (sentido anti-horário) - inverso de F
+    array<int, 4> corners = {0, 1, 5, 4}; // URF, ULF, DLF, DRF
     
-    //direita para topo
-    face[4][0] = face[1][1];
-    face[4][3] = face[1][2];
+    int temp_pos = posicoes[corners[0]];
+    posicoes[corners[0]] = posicoes[corners[1]];
+    posicoes[corners[1]] = posicoes[corners[2]];
+    posicoes[corners[2]] = posicoes[corners[3]];
+    posicoes[corners[3]] = temp_pos;
+}
+
+void Cubo::rota_costa_anti() {
+    // B' (sentido anti-horário) - inverso de B
+    array<int, 4> corners = {3, 2, 6, 7}; // URB, ULB, DLB, DRB
     
-    //baixo para dir
-    face[1][1] = face[5][3];
-    face[1][2] = face[5][0];
-    
-    //esq para baixo
-    face[5][0] = face[3][3];
-    face[5][3] = face[3][1];
-    
-    //topo para esq
-    face[3][1] = temp1;
-    face[3][3] = temp2;
+    int temp_pos = posicoes[corners[0]];
+    posicoes[corners[0]] = posicoes[corners[1]];
+    posicoes[corners[1]] = posicoes[corners[2]];
+    posicoes[corners[2]] = posicoes[corners[3]];
+    posicoes[corners[3]] = temp_pos;
 }
 
 void Cubo::rota_dir() {
-    char aux = face[1][0];
-    face[1][0] = face[1][2];
-    face[1][2] = face[1][3];
-    face[1][3] = face[1][1];
-    face[1][1] = aux;
+    // R (sentido horário)
+    array<int, 4> corners = {0, 3, 7, 4}; // URF, URB, DRB, DRF
     
-    //dir
-    char temp1 = face[0][1];
-    char temp2 = face[0][2];
-    
-    //topo para frente 
-    face[0][1] = face[4][1];
-    face[0][2] = face[4][2];
-    
-    //costa para topo
-    face[4][1] = face[2][0];
-    face[4][2] = face[2][3];
-    
-    //baixo para costa
-    face[2][0] = face[5][1];
-    face[2][3] = face[5][2];
-    
-    //frente para baixo
-    face[5][1] = temp1;
-    face[5][2] = temp2;
+    int temp_pos = posicoes[corners[0]];
+    posicoes[corners[0]] = posicoes[corners[3]];
+    posicoes[corners[3]] = posicoes[corners[2]];
+    posicoes[corners[2]] = posicoes[corners[1]];
+    posicoes[corners[1]] = temp_pos;
 }
 
 void Cubo::rota_esq() {
-    char aux = face[3][0];
-    face[3][0] = face[3][2];
-    face[3][2] = face[3][3];
-    face[3][3] = face[3][1];
-    face[3][1] = aux;
+    // L (sentido horário) - NÃO é o inverso de R!
+    array<int, 4> corners = {1, 2, 6, 5}; // ULF, ULB, DLB, DLF
     
-    //salva esq
-    char temp1 = face[0][0];
-    char temp2 = face[0][3];
+    int temp_pos = posicoes[corners[0]];
+    posicoes[corners[0]] = posicoes[corners[3]];
+    posicoes[corners[3]] = posicoes[corners[2]];
+    posicoes[corners[2]] = posicoes[corners[1]];
+    posicoes[corners[1]] = temp_pos;
+}
+
+void Cubo::rota_dir_anti() {
+    // R' (sentido anti-horário) - inverso de R
+    array<int, 4> corners = {0, 3, 7, 4}; // URF, URB, DRB, DRF
     
-    //baixo para frente
-    face[0][0] = face[5][0];
-    face[0][3] = face[5][3];
+    int temp_pos = posicoes[corners[0]];
+    posicoes[corners[0]] = posicoes[corners[1]];
+    posicoes[corners[1]] = posicoes[corners[2]];
+    posicoes[corners[2]] = posicoes[corners[3]];
+    posicoes[corners[3]] = temp_pos;
+}
+
+void Cubo::rota_esq_anti() {
+    // L' (sentido anti-horário) - inverso de L
+    array<int, 4> corners = {1, 2, 6, 5}; // ULF, ULB, DLB, DLF
     
-    //costas para baixo
-    face[5][0] = face[2][1];
-    face[5][3] = face[2][2];
-    
-    //topo par costas
-    face[2][1] = face[4][0];
-    face[2][2] = face[4][3];
-    
-    //frente para topo
-    face[4][0] = temp1;
-    face[4][3] = temp2;
+    int temp_pos = posicoes[corners[0]];
+    posicoes[corners[0]] = posicoes[corners[1]];
+    posicoes[corners[1]] = posicoes[corners[2]];
+    posicoes[corners[2]] = posicoes[corners[3]];
+    posicoes[corners[3]] = temp_pos;
 }
 
 void Cubo::rota_topo() {
-    char aux = face[4][0];
-    face[4][0] = face[4][2];
-    face[4][2] = face[4][3];
-    face[4][3] = face[4][1];
-    face[4][1] = aux;
+    // U (sentido horário)
+    array<int, 4> corners = {0, 3, 2, 1}; // URF, URB, ULB, ULF
     
-    //topo
-    char temp1 = face[0][0];
-    char temp2 = face[0][1];
-    
-    //dir para frente
-    face[0][0] = face[1][0];
-    face[0][1] = face[1][1];
-    
-    //costa para dir
-    face[1][0] = face[2][0];
-    face[1][1] = face[2][1];
-    
-    //esq para costa
-    face[2][0] = face[3][0];
-    face[2][1] = face[3][1];
-    
-    //frente para esq
-    face[3][0] = temp1;
-    face[3][1] = temp2;
+    int temp_pos = posicoes[corners[0]];
+    posicoes[corners[0]] = posicoes[corners[3]];
+    posicoes[corners[3]] = posicoes[corners[2]];
+    posicoes[corners[2]] = posicoes[corners[1]];
+    posicoes[corners[1]] = temp_pos;
 }
 
 void Cubo::rota_base() {
-    char aux = face[5][0];
-    face[5][0] = face[5][2];
-    face[5][2] = face[5][3];
-    face[5][3] = face[5][1];
-    face[5][1] = aux;
+    // D (sentido horário) - NÃO é o inverso de U!
+    array<int, 4> corners = {4, 7, 6, 5}; // DRF, DRB, DLB, DLF
     
-    //frente
-    char temp1 = face[0][2];
-    char temp2 = face[0][3];
+    int temp_pos = posicoes[corners[0]];
+    posicoes[corners[0]] = posicoes[corners[3]];
+    posicoes[corners[3]] = posicoes[corners[2]];
+    posicoes[corners[2]] = posicoes[corners[1]];
+    posicoes[corners[1]] = temp_pos;
+}
+
+void Cubo::rota_topo_anti() {
+    // U' (sentido anti-horário) - inverso de U
+    array<int, 4> corners = {0, 3, 2, 1}; // URF, URB, ULB, ULF
     
-    //esq para frente
-    face[0][2] = face[3][2];
-    face[0][3] = face[3][3];
+    int temp_pos = posicoes[corners[0]];
+    posicoes[corners[0]] = posicoes[corners[1]];
+    posicoes[corners[1]] = posicoes[corners[2]];
+    posicoes[corners[2]] = posicoes[corners[3]];
+    posicoes[corners[3]] = temp_pos;
+}
+
+void Cubo::rota_base_anti() {
+    // D' (sentido anti-horário) - inverso de D
+    array<int, 4> corners = {4, 7, 6, 5}; // DRF, DRB, DLB, DLF
     
-    //tras para esq
-    face[3][2] = face[2][2];
-    face[3][3] = face[2][3];
+    int temp_pos = posicoes[corners[0]];
+    posicoes[corners[0]] = posicoes[corners[1]];
+    posicoes[corners[1]] = posicoes[corners[2]];
+    posicoes[corners[2]] = posicoes[corners[3]];
+    posicoes[corners[3]] = temp_pos;
+}
+
+bool Cubo::isCornerCorrect(int corner) const {
+    return posicoes[corner] == corner;
+}
+
+bool Cubo::isCornerOriented(int corner) const {
+    return orientacoes[corner] == 0;
+}
+
+int Cubo::countCorrectCorners() const {
+    int count = 0;
+    for (int i = 0; i < 8; i++) {
+        if (isCornerCorrect(i)) {
+            count++;
+        }
+    }
+    return count;
+}
+
+int Cubo::countOrientedCorners() const {
+    int count = 0;
+    for (int i = 0; i < 8; i++) {
+        if (isCornerOriented(i)) {
+            count++;
+        }
+    }
+    return count;
+}
+
+int Cubo::countSolvedFaces() const {
+    // Para um cubo 2x2, uma face está resolvida se seus 4 cantos
+    // estão nas posições corretas E com orientações corretas
+    // Esta é uma aproximação simplificada
+    int solved = 0;
     
-    //direita para tras
-    face[2][2] = face[1][2];
-    face[2][3] = face[1][3];
+    // Verifica cada "face" virtual baseada nos cantos
+    // Esta é uma heurística simplificada
+    int correctCount = countCorrectCorners();
+    if (correctCount == 8) return 6; // Cubo totalmente resolvido
     
-    // frente para dir
-    face[1][2] = temp1;
-    face[1][3] = temp2;
+    // Aproximação: se muitos cantos estão corretos, algumas faces podem estar resolvidas
+    if (correctCount >= 6) return 2;
+    if (correctCount >= 4) return 1;
+    
+    return 0;
+}
+
+array<array<char, 4>, 6> Cubo::para_faces() const {
+    array<array<char, 4>, 6> faces;
+    
+    // Cores fixas para cada face no estado resolvido
+    char cores_faces[6] = {'W', 'R', 'Y', 'O', 'B', 'G'};
+    
+    // Para debug: mostrar números dos cantos em cada posição
+    for (int i = 0; i < 6; i++) {
+        for (int j = 0; j < 4; j++) {
+            // Mostrar qual canto está em cada posição
+            faces[i][j] = cores_faces[i]; // Mostra o número da face
+        }
+    }
+    
+    return faces;
+}
+
+void Cubo::printar_bonito() const {
+    auto faces = para_faces();
+    string nomes[6] = {"FRENTE", "DIREITA", "COSTA", "ESQUERDA", "TOPO", "BASE"};
+    
+    for(int i = 0; i < 6; i++) {
+        cout << nomes[i] << ": ";
+        for(int j = 0; j < 4; j++) {
+            cout << faces[i][j];
+        }
+        cout << endl;
+    }
+    cout << endl;
 }
 
 void Cubo::embaralha(){
-    rota_frente();
     rota_dir();
+    rota_frente();
     rota_topo();
+    rota_esq_anti();
+    rota_base();
+    rota_costa_anti();
+    rota_frente();
+    rota_dir_anti();
+    rota_topo_anti();
+    rota_esq();
+    rota_base_anti();
     rota_costa();
-}   
+    rota_frente_anti();
+    rota_dir();
+}

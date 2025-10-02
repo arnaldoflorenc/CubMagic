@@ -9,7 +9,8 @@ using namespace std;
 
 class Cubo {
 private: 
-    array<array<char,4>,6> face;
+    array<int, 8> posicoes;     // Posição dos cantos (0-7)
+    array<int, 8> orientacoes;  // Orientação dos cantos (0-2)
     int custo_mov;
 
 public:
@@ -21,32 +22,29 @@ public:
 
     bool resolvido() const;
 
-    string transfString();
-
-    string transfStringCanonical() const;
-
     void rota_frente();
     void rota_costa();
     void rota_dir();
     void rota_esq();
-    void rota_cub_dir();
-    void rota_cub_cima();
     void rota_topo();
     void rota_base();
     void embaralha();
+    void rota_frente_anti();
+    void rota_costa_anti();
+    void rota_dir_anti();
+    void rota_esq_anti();
+    void rota_topo_anti();
+    void rota_base_anti();
 
-    const array<char,4>& getFace(int faceIndex) const {
-        return face[faceIndex];
-    }
-    
-    char getFaceColor(int faceIndex, int position) const {
-        return face[faceIndex][position];
-    }
-    
-    char getExpectedColor(int faceIndex) const {
-        static const char expected[6] = {'W','R','Y','O','B','G'};
-        return expected[faceIndex];
-    }
+    int countCorrectCorners() const;
+    int countOrientedCorners() const;
+    int countSolvedFaces() const;
+
+    bool isCornerCorrect(int corner) const;
+    bool isCornerOriented(int corner) const;
+
+    void printar_bonito() const;
+    array<array<char, 4>, 6> para_faces() const;
 };
 
 #endif

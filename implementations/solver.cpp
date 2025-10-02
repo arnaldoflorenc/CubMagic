@@ -21,7 +21,13 @@ vector<M> get_moves(){
         {2, [](Cubo& c){c.rota_dir(); },1},
         {3, [](Cubo& c){c.rota_esq(); },1},
         {4, [](Cubo& c){c.rota_topo(); },1},
-        {5, [](Cubo& c){c.rota_base(); },1}
+        {5, [](Cubo& c){c.rota_base(); },1},
+        {6, [](Cubo& c){c.rota_frente_anti(); },1},
+        {7, [](Cubo& c){c.rota_costa_anti(); },1},
+        {8, [](Cubo& c){c.rota_dir_anti(); },1},
+        {9, [](Cubo& c){c.rota_esq_anti(); },1},
+        {10, [](Cubo& c){c.rota_topo_anti(); },1},
+        {11, [](Cubo& c){c.rota_base_anti(); },1}
     };
 }
 
@@ -116,127 +122,64 @@ vector<int> BFS(Cubo inicio, size_t bloomSize = 4000000, int bloomHashes = 5){
 
 class Heuristica2x2 {
 private:
-    unordered_map<uint32_t, int> patternDB;
+    unordered_map<size_t, int> patternDB;
     const size_t MAX_DB_SIZE = 50000;
     
-    // Converte cor para índice (0-5)
-    int colorToIndex(char color) const {
-        switch(color) {
-            case 'W': return 0; case 'R': return 1;
-            case 'Y': return 2; case 'O': return 3;
-            case 'B': return 4; case 'G': return 5;
-            default: return 0;
-        }
-    }
-    
-    // Gera chave única baseada nos CANTOS do 2x2
-    uint32_t generateCornerPattern(const Cubo& cube) const {
-        uint32_t pattern = 0;
-        
-        // POSIÇÕES DOS CANTOS no cubo 2x2
-        // Cada canto é definido por 3 posições (face, índice)
-        struct Corner { int face1, pos1, face2, pos2, face3, pos3; };
-        
-        Corner corners[8] = {
-            // Cantos superiores
-            {0,0, 4,1, 3,0}, {0,2, 4,2, 1,0},
-            {2,0, 4,0, 1,1}, {2,2, 4,3, 3,1},
-            // Cantos inferiores  
-            {0,1, 5,0, 3,2}, {0,3, 5,1, 1,2},
-            {2,1, 5,3, 1,3}, {2,3, 5,2, 3,3}
-        };
-        
-        for (int i = 0; i < 8; i++) {
-            const Corner& c = corners[i];
-            
-            // Pega as 3 cores deste canto
-            char color1 = cube.getFaceColor(c.face1, c.pos1);
-            char color2 = cube.getFaceColor(c.face2, c.pos2); 
-            char color3 = cube.getFaceColor(c.face3, c.pos3);
-            
-            // Codifica as 3 cores (3 bits cada)
-            uint32_t cornerCode = (colorToIndex(color1) << 6) | 
-                                 (colorToIndex(color2) << 3) | 
-                                 (colorToIndex(color3));
-            
-            // Combina no pattern final
-            pattern ^= (cornerCode << (i * 3));
-        }
-        
-        return pattern;
-    }
-    
-    
-    // Heurística inteligente baseada em cantos
+    // Heurística baseada em posições e orientações dos cantos
     int calculateCornerHeuristic(const Cubo& cube) const {
         int heuristic = 0;
         
-        // 1. CANTOS NA POSIÇÃO CORRETA
-        int correctCorners = countCorrectCorners(cube);
-        heuristic += (8 - correctCorners) * 2;
+        // 1. CANTOS NA POSIÇÃO CORRETA - peso maior
+        int correctCorners = 0;
+        int orientedCorners = 0;
         
-        // 2. CANTOS COM ORIENTAÇÃO CORRETA  
-        int orientedCorners = countOrientedCorners(cube);
-        heuristic += (8 - orientedCorners) * 1;
+        for (int i = 0; i < 8; i++) {
+            if (cube.isCornerCorrect(i)) {
+                correctCorners++;
+                if (cube.isCornerOriented(i)) {
+                    orientedCorners++;
+                }
+            }
+        }
         
-        // 3. FACES RESOLVIDAS (bônus negativo)
-        int solvedFaces = countSolvedFaces(cube);
-        heuristic -= solvedFaces * 2;
+        heuristic += (8 - correctCorners) * 3; // Peso maior para posição
+        heuristic += (8 - orientedCorners) * 1; // Peso menor para orientação
+        
+        // 2. BÔNUS para grupos de cantos resolvidos
+        // Cantos adjacentes resolvidos indicam faces parcialmente resolvidas
+        int bonus = 0;
+        
+        // Verifica se cantos opostos estão resolvidos (indicador de progresso)
+        if (cube.isCornerCorrect(0) && cube.isCornerCorrect(2)) bonus -= 1;
+        if (cube.isCornerCorrect(1) && cube.isCornerCorrect(3)) bonus -= 1;
+        if (cube.isCornerCorrect(4) && cube.isCornerCorrect(6)) bonus -= 1;
+        if (cube.isCornerCorrect(5) && cube.isCornerCorrect(7)) bonus -= 1;
+        
+        heuristic += bonus;
         
         return max(1, heuristic);
     }
     
-    int countCorrectCorners(const Cubo& cube) const {
-        int count = 0;
-        // Um canto está na posição correta se suas 3 cores 
-        // pertencem às 3 faces que se encontram naquela posição
-        // (implementação simplificada)
+    // Heurística alternativa mais agressiva
+    int calculateAdvancedHeuristic(const Cubo& cube) const {
+        int h1 = calculateCornerHeuristic(cube);
         
-        for (int face = 0; face < 6; face++) {
-            char expected = cube.getExpectedColor(face);
-            // Verifica se os cantos desta face têm cores esperadas
-            if (cube.getFaceColor(face, 0) == expected) count++;
-            if (cube.getFaceColor(face, 2) == expected) count++;
-        }
-        
-        return count / 3; // Aproximação
-    }
-    
-    int countOrientedCorners(const Cubo& cube) const {
-        // Um canto está orientado corretamente se a cor "principal"
-        // está na face correta
-        int count = 0;
-        
-        for (int face = 0; face < 6; face++) {
-            char expected = cube.getExpectedColor(face);
-            // Verifica posições de canto
-            if (cube.getFaceColor(face, 0) == expected) count++;
-            if (cube.getFaceColor(face, 2) == expected) count++;
-        }
-        
-        return count;
-    }
-    
-    int countSolvedFaces(const Cubo& cube) const {
-        int solved = 0;
-        for (int face = 0; face < 6; face++) {
-            char first = cube.getFaceColor(face, 0);
-            bool faceSolved = true;
-            for (int pos = 1; pos < 4; pos++) {
-                if (cube.getFaceColor(face, pos) != first) {
-                    faceSolved = false;
-                    break;
-                }
+        // Heurística adicional baseada na distância de Manhattan
+        int manhattan = 0;
+        for (int i = 0; i < 8; i++) {
+            if (!cube.isCornerCorrect(i)) {
+                manhattan += 1; // Distância simplificada
             }
-            if (faceSolved) solved++;
         }
-        return solved;
+        
+        // Combina as duas heurísticas
+        return max(h1, manhattan);
     }
     
 public:
     int getHeuristic(const Cubo& cube) {
-        // Gera pattern baseado nos cantos
-        uint32_t patternKey = generateCornerPattern(cube);
+        // Usa o hash do cubo como chave
+        size_t patternKey = cube.hash();
         
         // Verifica no lookup table
         auto it = patternDB.find(patternKey);
@@ -244,9 +187,10 @@ public:
             return it->second;
         }
         
-        // Calcula e armazena se não encontrou
-        int h = calculateCornerHeuristic(cube);
+        // Calcula nova heurística
+        int h = calculateAdvancedHeuristic(cube);
         
+        // Armazena se há espaço
         if (patternDB.size() < MAX_DB_SIZE) {
             patternDB[patternKey] = h;
         }
@@ -283,11 +227,13 @@ vector<int> Aestrela(Cubo inicio) {
     
     cout << "A* Iniciando..." << endl;
 
-    
     while (!openList.empty()) {
         auto no_atual = openList.top();
         openList.pop();
         
+        nos_expandidos++;
+        
+        // Verifica se este nó ainda é o melhor para este estado
         size_t hash_atual = no_atual->cube.hash();
         if (best_g[hash_atual] < no_atual->g) {
             continue;
@@ -295,7 +241,7 @@ vector<int> Aestrela(Cubo inicio) {
         
         if (no_atual->cube.resolvido()) {
             cout << "SOLUÇÃO ENCONTRADA!" << endl;
-            cout << "Nós: " << nos_expandidos << ", Movimentos: " << no_atual->g << endl;
+            cout << "Nós expandidos: " << nos_expandidos << ", Movimentos: " << no_atual->g << endl;
             return reconstruir_caminho(static_pointer_cast<No>(no_atual));
         }
         
@@ -307,6 +253,7 @@ vector<int> Aestrela(Cubo inicio) {
         int mov_anterior = no_atual->mov;
         
         for (auto &mov : movimentos) {
+            // Evita movimento inverso ao anterior
             if (mov_anterior != -1 && mov.mov == inverso(mov_anterior)) {
                 continue;
             }
@@ -314,17 +261,19 @@ vector<int> Aestrela(Cubo inicio) {
             Cubo prox = cubo_base;
             mov.acao(prox);
             
-            int g_novo = no_atual->g + 1;
+            int g_novo = no_atual->g + mov.custo;
             
             if (g_novo >= MAX_PROFUNDIDADE) continue;
             
             size_t prox_hash = prox.hash();
             
+            // Verifica se encontramos um caminho melhor para este estado
             auto it = best_g.find(prox_hash);
             if (it != best_g.end() && it->second <= g_novo) {
                 continue;
             }
             
+            // Atualiza melhor custo e adiciona à fila
             best_g[prox_hash] = g_novo;
             int h_novo = heuristica(prox);
             
@@ -336,9 +285,30 @@ vector<int> Aestrela(Cubo inicio) {
             openList.push(novo_no);
         }
         
-        
+        // Log periódico para debug
+        if (nos_expandidos % 10000 == 0) {
+            cout << "Nós expandidos: " << nos_expandidos 
+                 << ", Fila: " << openList.size() 
+                 << ", Estados únicos: " << best_g.size() << endl;
+        }
     }
     
-    cout << "Não encontrou solução " << endl;
+    cout << "Não encontrou solução após " << nos_expandidos << " nós expandidos" << endl;
     return {};
+}
+
+// Função auxiliar para converter movimentos (se necessário)
+vector<string> converter_movimentos(const vector<int>& caminho) {
+    vector<string> movimentos_str;
+    vector<string> nomes = {
+        "F", "B", "R", "L", "U", "D", 
+        "F'", "B'", "R'", "L'", "U'", "D'"
+    };
+    
+    for (int mov : caminho) {
+        if (mov >= 0 && mov < nomes.size()) {
+            movimentos_str.push_back(nomes[mov]);
+        }
+    }
+    return movimentos_str;
 }

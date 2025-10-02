@@ -37,11 +37,23 @@ int main(){
             cub.rota_esq();
         }else if(monta_aux == 4){
             cub.rota_topo();
-        }else{
+        }else if(monta_aux == 5){
             cub.rota_base();
+        }else if(monta_aux == 6){
+            cub.rota_frente_anti();
+        }else if(monta_aux == 7){
+            cub.rota_costa_anti();
+        }else if(monta_aux == 8){
+            cub.rota_dir_anti();
+        }else if(monta_aux == 9){
+            cub.rota_esq_anti();
+        }else if(monta_aux == 10){
+            cub.rota_topo_anti();
+        }else if(monta_aux == 11){
+            cub.rota_base_anti();
         }
     }
-    cub.printar();
+    cub.printar_bonito();
 
     return 0;
 }
