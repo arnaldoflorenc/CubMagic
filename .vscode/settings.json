@@ -1,5 +1,8 @@
 {
     "files.associations": {
-        "array": "cpp"
+        "array": "cpp",
+        "unordered_set": "cpp",
+        "iostream": "cpp",
+        "cstdint": "cpp"
     }
 }
