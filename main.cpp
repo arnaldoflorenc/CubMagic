@@ -205,6 +205,21 @@ int main() {
                     }
                 }
 
+                // Resolver animado usando DFS
+                if(event.key.code == sf::Keyboard::Y) {
+                    cout << "DFS iniciando..." << endl;
+                    vector<int> solucao = DFS(cubo, 1 << 20, 3);  // chama DFS
+                    if(solucao.empty()) {
+                        cout << "Cubo já está resolvido ou não foi encontrada solução!" << endl;
+                    } else {
+                        cout << "Animando solução DFS..." << endl;
+                        for(int m : solucao) {
+                            animaMovimento(cubo, m, window, 1.0f, 0.05f);
+                        }
+                        cout << "Cubo resolvido com DFS!" << endl;
+                    }
+                }
+
                 // Debug
                 if(event.key.code == sf::Keyboard::D) {
                     cout << "== Teste de rotações iniciado ==\n";
