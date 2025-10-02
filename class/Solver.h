@@ -10,7 +10,6 @@
 #include <unordered_set>
 #include <memory>
 #include "Cubo.h"
-#include "bloom.h"
 
 using namespace std;
 
@@ -30,8 +29,10 @@ typedef struct Movimetos{
 
 vector<M> get_moves();
 int inverso(int mov);
+void func_sucessora(stack<shared_ptr<N>>& pilha, shared_ptr<N> no_atual, const vector<M>& movimentos, unordered_set<size_t>& visitados);
 vector<int> DFS(Cubo inicio);
-vector<int> BFS(Cubo inicio, int limite);
+void func_sucessora_BFS(stack<shared_ptr<N>>& pilha, shared_ptr<N> no_atual, const vector<M>& movimentos, unordered_set<size_t>& visitados);
+vector<int> BFS(Cubo inicio);
 vector<int> reconstruir_caminho(shared_ptr<N> no_final);
 vector<string> converter_movimentos(const vector<int>& caminho);
 

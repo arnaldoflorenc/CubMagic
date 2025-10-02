@@ -8,28 +8,27 @@
 #include <memory>
 #include <queue>
 #include <unordered_set>
-#include "../class/bloom.h"
 
 using namespace std;
 
 vector<M> get_moves() {
     return {
-        {0, [](Cubo& c){ c.rota_frente(); }, 0}, // frente
-        {1, [](Cubo& c){ c.rota_costa(); }, 1},  // costa
-        {2, [](Cubo& c){ c.rota_dir(); }, 2},    // direita
-        {3, [](Cubo& c){ c.rota_esq(); }, 3},    // esquerda
-        {4, [](Cubo& c){ c.rota_topo(); }, 4},   // topo
-        {5, [](Cubo& c){ c.rota_base(); }, 5}    // base
+        {0, [](Cubo& c){ c.rota_frente(); }, 0},           // F
+        {1, [](Cubo& c){ c.rota_frente_anti(); }, 1},   // F' (inverso de F)
+        {2, [](Cubo& c){ c.rota_dir(); }, 2},              // R  
+        {3, [](Cubo& c){ c.rota_dir_anti(); }, 3},      // R' (inverso de R)
+        {4, [](Cubo& c){ c.rota_topo(); }, 4},             // U
+        {5, [](Cubo& c){ c.rota_topo_anti(); }, 5}      // U' (inverso de U)
     };
 }
 
 int inverso(int mov) {
     switch(mov) {
-        case 0: return 1; // frente <-> costa
-        case 1: return 0;
-        case 2: return 3; // direita <-> esquerda
+        case 0: return 1;  // F <-> F'
+        case 1: return 0;  
+        case 2: return 3;  // R <-> R'
         case 3: return 2;
-        case 4: return 5; // topo <-> base
+        case 4: return 5;  // U <-> U'
         case 5: return 4;
     }
     return -1; 
@@ -72,155 +71,115 @@ vector<int> juntar_caminhos(shared_ptr<N> inicio, shared_ptr<N> fim) {
     return caminho_inicio;
 }
 
+void func_sucessora(stack<shared_ptr<N>>& pilha, shared_ptr<N> no_atual, const vector<M>& movimentos, unordered_set<size_t>& visitados) {
+    for(const auto &mov : movimentos){
+        if(no_atual->mov != -1 && mov.mov == inverso(no_atual->mov)) 
+            continue;
+
+        auto novo_cubo = make_shared<Cubo>(*no_atual->cube);
+        mov.acao(*novo_cubo);
+
+        size_t h = novo_cubo->hash();
+        if(visitados.count(h)){
+            continue;
+        }
+
+        visitados.insert(h);
+
+        auto novo_no = make_shared<N>(N{
+            novo_cubo, 
+            no_atual->profund + 1, 
+            mov.mov, 
+            no_atual
+        });
+
+        pilha.push(novo_no);
+    }
+}
+
 vector<int> DFS(Cubo inicio) {
     auto movimentos = get_moves();
-
-    bloom bloomFilter(16'000'000, 7);
-    unordered_set<size_t> exactSet;
-
     stack<shared_ptr<N>> pilha;
-    auto no_inicial = make_shared<N>(N{make_shared<Cubo>(inicio), 0, -1, nullptr});
-    pilha.push(no_inicial);
+    unordered_set<size_t> visitados;  
+    auto estado = make_shared<N>(N{make_shared<Cubo>(inicio), 0, -1, nullptr});
 
-    bloomFilter.insert(no_inicial->cube->hash());
-    exactSet.insert(no_inicial->cube->hash());
+    pilha.push(estado);
+    visitados.insert(inicio.hash());
 
-    while(!pilha.empty()) {
-        auto no_atual = pilha.top(); 
+    int estados_explorados = 0;
+    int max_estados = 100000; 
+
+    while(!pilha.empty() && estados_explorados < max_estados) {
+        auto no_atual = pilha.top();
         pilha.pop();
+        estados_explorados++;
 
         if(no_atual->cube->resolvido()) {
+            cout << "SOLUÇÃO ENCONTRADA! Estados explorados: " << estados_explorados 
+                 << ", Profundidade: " << no_atual->profund << endl;
             return reconstruir_caminho(no_atual);
         }
-
-        for(auto &mov : movimentos) {
-            if(no_atual->mov != -1 && mov.mov == inverso(no_atual->mov)) continue;
-
-            auto prox = make_shared<Cubo>(*no_atual->cube);
-            prox->aplica_movimento(mov.mov);
-
-            size_t prox_hash = prox->hash();
-            if(exactSet.count(prox_hash) || bloomFilter.mightContain(prox_hash)) continue;
-
-            exactSet.insert(prox_hash);
-            bloomFilter.insert(prox_hash);
-
-            pilha.push(make_shared<N>(N{prox, no_atual->profund + 1, mov.mov, no_atual}));
+        
+        if(no_atual->profund < 17) { // Reduz para 8
+            func_sucessora(pilha, no_atual, movimentos, visitados);
         }
     }
+
     return {};
 }
 
-vector<int> BFS(Cubo inicio, int limite = 20) {
+void func_sucessora_BFS(queue<shared_ptr<N>>& fila, shared_ptr<N> no_atual, const vector<M>& movimentos, unordered_set<size_t>& visitados) {
+    for(const auto &mov : movimentos){
+        if(no_atual->mov != -1 && mov.mov == inverso(no_atual->mov)) 
+            continue;
+
+        auto novo_cubo = make_shared<Cubo>(*no_atual->cube);
+        mov.acao(*novo_cubo);
+
+        size_t h = novo_cubo->hash();
+        if(visitados.count(h)){
+            continue;
+        }
+
+        visitados.insert(h);
+
+        auto novo_no = make_shared<N>(N{
+            novo_cubo, 
+            no_atual->profund + 1, 
+            mov.mov, 
+            no_atual
+        });
+
+        fila.push(novo_no);
+    }
+}
+
+vector<int> BFS(Cubo inicio) {
     auto movimentos = get_moves();
+    queue<shared_ptr<N>> fila;
+    unordered_set<size_t> visitados;  
+    auto estado = make_shared<N>(N{make_shared<Cubo>(inicio), 0, -1, nullptr});
 
-    // Estado inicial e final
-    auto no_inicial = make_shared<N>(N{make_shared<Cubo>(inicio), 0, -1, nullptr});
-    Cubo cubo_resolvido;
-    auto no_final = make_shared<N>(N{make_shared<Cubo>(cubo_resolvido), 0, -1, nullptr});
+    fila.push(estado);
+    visitados.insert(inicio.hash());
 
-    // Verificar se já está resolvido
-    if(inicio.resolvido()) {
-        cout << "Já está resolvido!" << endl;
-        return {};
+    int estados_explorados = 0;
+    int max_estados = 100000; 
+
+    while(!fila.empty() && estados_explorados < max_estados) {
+        auto no_atual = fila.front();
+        fila.pop();
+        estados_explorados++;
+
+        if(no_atual->cube->resolvido()) {
+            cout << "SOLUÇÃO ENCONTRADA! Estados explorados: " << estados_explorados 
+                 << ", Profundidade: " << no_atual->profund << endl;
+            return reconstruir_caminho(no_atual);
+        }
+        
+        if(no_atual->profund < 14) { // Reduz para 8
+            func_sucessora_BFS(fila, no_atual, movimentos, visitados);
+        }
     }
-
-    queue<shared_ptr<N>> fila_inicio, fila_fim;
-    unordered_map<size_t, shared_ptr<N>> visitados_inicio, visitados_fim;
-
-    fila_inicio.push(no_inicial);
-    fila_fim.push(no_final);
-
-    visitados_inicio[no_inicial->cube->hash()] = no_inicial;
-    visitados_fim[no_final->cube->hash()] = no_final;
-
-    auto expandir_nivel = [&](queue<shared_ptr<N>>& fila, 
-                             unordered_map<size_t, shared_ptr<N>>& meus_visitados,
-                             unordered_map<size_t, shared_ptr<N>>& outros_visitados,
-                             bool expandindo_do_inicio) -> vector<int> {
-        
-        int tamanho_nivel = fila.size();
-        if (tamanho_nivel == 0) return {};
-        
-        for(int i = 0; i < tamanho_nivel; i++) {
-            auto no_atual = fila.front();
-            fila.pop();
-
-            // Verificar se encontramos solução direta
-            if(no_atual->cube->resolvido()) {
-                return reconstruir_caminho(no_atual);
-            }
-
-            // Verificar limite de profundidade
-            if(no_atual->profund >= limite) {
-                continue;
-            }
-
-            for(auto &mov : movimentos) {
-                // Pular movimento inverso ao anterior
-                if(no_atual->mov != -1 && mov.mov == inverso(no_atual->mov)) 
-                    continue;
-
-                auto prox_cubo = make_shared<Cubo>(*no_atual->cube);
-                mov.acao(*prox_cubo);
-
-                size_t h = prox_cubo->hash();
-                
-                // Se já visitamos este estado, pular
-                if(meus_visitados.count(h)) 
-                    continue;
-
-                auto novo_no = make_shared<N>(N{prox_cubo, no_atual->profund + 1, mov.mov, no_atual});
-                meus_visitados[h] = novo_no;
-
-                // Verificar colisão com o outro BFS
-                auto it = outros_visitados.find(h);
-                if(it != outros_visitados.end()) {
-
-                    // Verificar se o estado é válido
-                    Cubo teste = *novo_no->cube;
-                    
-                    if(expandindo_do_inicio) {
-                        return juntar_caminhos(novo_no, it->second);
-                    } else {
-                        return juntar_caminhos(it->second, novo_no);
-                    }
-                }
-
-                fila.push(novo_no);
-            }
-        }
-        
-        return {};
-    };
-
-    int iteracoes = 0;
-    int max_iteracoes = 1000;
-
-    while(iteracoes < max_iteracoes) {
-        iteracoes++;
-
-        // Se ambas as filas estão vazias, parar
-        if(fila_inicio.empty() && fila_fim.empty()) {
-            break;
-        }
-
-        // Expansão do início para o fim
-        if(!fila_inicio.empty()) {
-            vector<int> sol = expandir_nivel(fila_inicio, visitados_inicio, visitados_fim, true);
-            if(!sol.empty()) {
-                return sol;
-            }
-        }
-
-        // Expansão do fim para o início  
-        if(!fila_fim.empty()) {
-            vector<int> sol = expandir_nivel(fila_fim, visitados_fim, visitados_inicio, false);
-            if(!sol.empty()) {
-                return sol;
-            }
-        }
-
-    }
-    return DFS(inicio);
+    return {};
 }
