@@ -9,14 +9,11 @@ int main(){
     // face 0= branco face 1= vermelho face 2=amarelo face 3=laranja face 4=azul face 5=verde
     cout<<"Cubo (estado inicial):\n";
 
-
     cub.embaralha();
     cub.printar_bonito();
     cout<<endl;
 
-
-
-    vector<int> solucao = BFS(cub);
+    vector<int> solucao = Aestrela(cub);
     if (!solucao.empty()){
         cout<<"\nSolução (movimentos): ";
         for (auto &m : solucao){
@@ -38,8 +35,20 @@ int main(){
             cub.rota_dir_anti();
         }else if(monta_aux == 4){
             cub.rota_topo();
-        }else{
+        }else if(monta_aux == 5){
             cub.rota_topo_anti();
+        }else if(monta_aux == 6){
+            cub.rota_base();
+        }else if(monta_aux == 7){
+            cub.rota_base_anti();
+        }else if(monta_aux == 8){
+            cub.rota_esq();
+        }else if(monta_aux == 9){
+            cub.rota_esq_anti();
+        }else if(monta_aux == 10){
+            cub.rota_costa();
+        }else{
+            cub.rota_costa_anti();
         }
     }
     cub.printar_bonito();

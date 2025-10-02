@@ -175,6 +175,46 @@ void Cubo::rota_base_anti() {
     posicoes[corners[3]] = temp_pos;
 }
 
+bool Cubo::isCornerCorrect(int corner) const {
+    return posicoes[corner] == corner;
+}
+
+bool Cubo::isCornerOriented(int corner) const {
+    return orientacoes[corner] == 0;
+}
+
+int Cubo::countCorrectCorners() const {
+    int count = 0;
+    for (int i = 0; i < 8; i++) {
+        if (isCornerCorrect(i)) {
+            count++;
+        }
+    }
+    return count;
+}
+
+int Cubo::countOrientedCorners() const {
+    int count = 0;
+    for (int i = 0; i < 8; i++) {
+        if (isCornerOriented(i)) {
+            count++;
+        }
+    }
+    return count;
+}
+
+int Cubo::countSolvedFaces() const {
+    int solved = 0;
+    
+    int correctCount = countCorrectCorners();
+    if (correctCount == 8) return 6; // Cubo totalmente resolvido
+    
+    if (correctCount >= 6) return 2;
+    if (correctCount >= 4) return 1;
+    
+    return 0;
+}
+
 void Cubo::embaralha(){//emarralha o cubo com uma sequência fixa de movimentos
     rota_dir_anti();
     rota_topo_anti();
@@ -198,14 +238,12 @@ void Cubo::embaralha(){//emarralha o cubo com uma sequência fixa de movimentos
 array<array<char, 4>, 6> Cubo::para_faces() const { //função de teste
     array<array<char, 4>, 6> faces;
     
-    // Cores fixas para cada face no estado resolvido
     char cores_faces[6] = {'W', 'R', 'Y', 'O', 'B', 'G'};
-    
-    // Para debug: mostrar números dos cantos em cada posição
+
     for (int i = 0; i < 6; i++) {
         for (int j = 0; j < 4; j++) {
-            // Mostrar qual canto está em cada posição
-            faces[i][j] = cores_faces[i]; // Mostra o número da face
+
+            faces[i][j] = cores_faces[i]; // Mostra face
         }
     }
     
