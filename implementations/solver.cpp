@@ -166,6 +166,7 @@ private:
         return pattern;
     }
     
+    
     // Heurística inteligente baseada em cantos
     int calculateCornerHeuristic(const Cubo& cube) const {
         int heuristic = 0;
